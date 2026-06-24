@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Primary Meta Tags -->
+  <meta name="title" content="InSight: Self-Guided Skill Acquisition via Steerable VLAs - Maggie Wang, Lars Osterberg, Stephen Tian, Ola Shorinwa, Jiajun Wu, Mac Schwager" />
+  <meta name="description" content="InSight makes vision-language-action (VLA) models steerable at the primitive-action level and uses that steerability to autonomously acquire and compose new manipulation skills, without human demonstrations of the target skills.">
+  <meta name="keywords" content="vision-language-action models, VLA, VLM, robotic manipulation, skill acquisition, primitive steerability, imitation learning, robot learning">
+  <meta name="author" content="Maggie Wang, Lars Osterberg, Stephen Tian, Ola Shorinwa, Jiajun Wu, Mac Schwager">
+  <meta name="robots" content="index, follow">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Stanford Multi-Robot Systems Lab">
+  <meta property="og:title" content="InSight: Self-Guided Skill Acquisition via Steerable VLAs">
+  <meta property="og:description" content="Making VLAs steerable at the primitive level to autonomously acquire and compose new manipulation skills.">
+  <meta property="og:image" content="static/images/overview.png">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="InSight: Self-Guided Skill Acquisition via Steerable VLAs">
+  <meta name="twitter:description" content="Making VLAs steerable at the primitive level to autonomously acquire and compose new manipulation skills.">
+  <meta name="twitter:image" content="static/images/overview.png">
+
+  <meta name="theme-color" content="#8C1515">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&display=swap" rel="stylesheet">
+
+  <title>InSight: Self-Guided Skill Acquisition via Steerable VLAs | Stanford Multi-Robot Systems Lab</title>
+
+  <!-- Favicon (static logo) -->
+  <link rel="icon" type="image/png" sizes="32x32" href="static/images/favicon-32.png">
+  <link rel="icon" type="image/png" href="static/images/favicon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="static/images/apple-touch-icon.png">
+
+  <!-- Critical CSS -->
+  <link rel="stylesheet" href="static/css/bulma.min.css">
+  <link rel="stylesheet" href="static/css/index.css">
+
+  <!-- Title-row offset: shift logo+title unit left so the title text sits near
+       page center (logo overhangs left). Disabled on narrow screens. -->
+  <style>
+    .title-row { transform: translateX(-42px); }
+    /* Tighten hero vertical rhythm (override index.css margins) */
+    .publication-title { margin-bottom: 0 !important; }
+    .publication-authors { margin-bottom: 0 !important; color: #00548f; }
+    .publication-authors a { color: #00548f !important; }
+    /* In-prose links: clearly a link, on-brand, not loud */
+    .inline-link, .content a.inline-link { color: #1f6fb2 !important;
+      text-decoration: none; text-underline-offset: 2px;
+      transition: color .15s; }
+    .inline-link:hover, .content a.inline-link:hover { color: #155a92 !important;
+      text-decoration: underline; text-decoration-color: rgba(31,111,178,0.5); }
+    /* Skill-acquisition: demos -> new-skill rows */
+    .skill-task { margin-bottom: 1.5rem; }
+    .media-slot { border-radius: 12px; overflow: hidden; line-height: 0; }
+    .media-slot video { width: 100%; display: block; border-radius: 12px; }
+    .placeholder-slot { display: flex; flex-direction: column; align-items: center;
+      justify-content: center; aspect-ratio: 4 / 3; border: 2px dashed #c9b8b8;
+      border-radius: 12px; background: #faf5f5; color: #9c8a8a; text-align: center;
+      padding: 1rem; font-size: 0.9rem; line-height: 1.45; }
+    .placeholder-slot .ph-tag { font-weight: 700; letter-spacing: 0.1em; color: #b07f7e; margin-bottom: 0.4rem; }
+    .placeholder-slot code { background: rgba(140,21,21,0.07); color: #8C1515;
+      padding: 0.1rem 0.35rem; border-radius: 5px; font-size: 0.8rem; margin-top: 0.3rem; }
+    .skill-col-label { text-align: center; font-weight: 700; margin-bottom: 0.5rem; }
+    .demos-col .skill-col-label { color: #555; }
+    .acquired-col .skill-col-label { color: #8C1515; }
+    .skill-col-label small { display: block; font-weight: 400; color: #8a8a8a;
+      font-size: 0.8rem; margin-top: 0.15rem; }
+    .skill-arrow { font-size: 1.8rem; color: #8C1515; font-weight: 700; }
+    @media screen and (max-width: 768px) { .skill-arrow { display: inline-block; transform: rotate(90deg); } }
+    @media screen and (max-width: 900px) {
+      .title-row { transform: none; }
+      .publication-title { font-size: 2.1rem !important; }
+    }
+    /* Phones / small tablets: stack the logo above the title so the text can wrap */
+    @media screen and (max-width: 768px) {
+      .title-row {
+        display: flex !important; flex-direction: column !important;
+        align-items: center !important; transform: none !important;
+        width: 100% !important; gap: 0.3rem !important; text-align: center !important;
+      }
+      .title-row img { margin-top: 0 !important; width: 92px !important; }
+      .publication-title {
+        flex: 0 1 auto !important; max-width: 100% !important; text-align: center !important;
+      }
+      /* teaser: let long result tags wrap and shrink the pitch so nothing overflows */
+      .tldr-tags .tag { white-space: normal !important; height: auto !important; font-size: 0.75rem !important; }
+      #teaser-video .line-tight { font-size: 1.1rem !important; }
+    }
+    @media screen and (max-width: 620px) {
+      .publication-title { font-size: 1.7rem !important; }
+    }
+    @media screen and (max-width: 400px) {
+      .publication-title { font-size: 1.45rem !important; }
+    }
+  </style>
+
+  <!-- Non-critical CSS -->
+  <link rel="preload" href="static/css/bulma-carousel.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="static/css/bulma-slider.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="static/css/fontawesome.all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link rel="stylesheet" href="static/css/bulma-carousel.min.css">
+    <link rel="stylesheet" href="static/css/bulma-slider.min.css">
+    <link rel="stylesheet" href="static/css/fontawesome.all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  </noscript>
+
+  <script defer src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="static/js/fontawesome.all.min.js"></script>
+  <script defer src="static/js/bulma-carousel.min.js"></script>
+  <script defer src="static/js/bulma-slider.min.js"></script>
+  <script defer src="static/js/index.js"></script>
+</head>
+<body>
+
+<!-- ============================================================
+     HERO  ·  title / authors / links
+     ============================================================ -->
+<main id="main-content">
+  <section class="hero">
+    <div class="hero-body">
+      <div class="container is-max-desktop">
+        <div class="columns is-centered">
+          <div class="column has-text-centered">
+
+            <!-- Title row (logo + title) -->
+            <div class="title-row" style="display:inline-flex; align-items:flex-start; gap: 0.15rem;
+                        text-align:left; margin: 0 auto 0.5rem;">
+              <img src="static/images/insight_logo_scan.gif" alt="InSight logo"
+                   style="width: 110px; height: auto; flex: 0 0 auto; margin-top: -12px;" />
+              <h1 class="title publication-title"
+                  style="font-size: 2.9rem; font-weight: 700; line-height: 1.18; margin: 0; text-align: center; flex: 0 0 auto;">
+                <span style="font-weight: 900; letter-spacing: -0.5px;
+                      background: linear-gradient(90deg, #8C1515 0%, #C8442E 100%);
+                      -webkit-background-clip: text; background-clip: text;
+                      -webkit-text-fill-color: transparent;">InSight</span>:
+                Self-Guided Skill Acquisition<br>via Steerable VLAs
+              </h1>
+            </div>
+
+            <div class="is-size-5 publication-authors has-text-centered" style="margin-top: 0.9rem;">
+              <span class="author-block"><a href="https://maggiewang.org/" target="_blank" rel="noopener">Maggie Wang</a><sup>1</sup>,</span>
+              <span class="author-block"><a href="https://msl.stanford.edu/people/larsosterberg" target="_blank" rel="noopener">Lars Osterberg</a><sup>1</sup>,</span>
+              <span class="author-block"><a href="https://s-tian.github.io/" target="_blank" rel="noopener">Stephen Tian</a><sup>1</sup>,</span>
+              <span class="author-block"><a href="https://os-hash.github.io/" target="_blank" rel="noopener">Ola Shorinwa</a><sup>2</sup>,</span>
+              <span class="author-block"><a href="https://jiajunwu.com/" target="_blank" rel="noopener">Jiajun Wu</a><sup>1</sup>,</span>
+              <span class="author-block"><a href="https://profiles.stanford.edu/mac-schwager/" target="_blank" rel="noopener">Mac Schwager</a><sup>1</sup></span>
+            </div>
+
+            <div class="is-size-6 affiliations has-text-centered" style="margin-top: 0.35rem;">
+              <span class="affil-block"><sup>1</sup> Stanford University</span>&nbsp;&nbsp;&nbsp;
+              <span class="affil-block"><sup>2</sup> Princeton University</span>
+            </div>
+
+            <div class="column has-text-centered" style="margin-top: 1rem; padding-top: 0;">
+              <div class="publication-links">
+                <span class="link-block">
+                  <a href="https://arxiv.org/pdf/2606.24884" target="_blank" rel="noopener"
+                     class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon"><i class="fas fa-file-pdf"></i></span><span>Paper</span>
+                  </a>
+                </span>
+                <span class="link-block">
+                  <a href="https://github.com/insight-vla/insight" target="_blank" rel="noopener"
+                     class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon"><i class="fab fa-github"></i></span><span>Code</span>
+                  </a>
+                </span>
+                <span class="link-block">
+                  <a href="https://arxiv.org/abs/2606.24884" target="_blank" rel="noopener"
+                     class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon"><i class="ai ai-arxiv"></i></span><span>arXiv</span>
+                  </a>
+                </span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ============================================================
+     1. HOOK  ·  overview figure + one-line pitch
+     ============================================================ -->
+<section class="hero teaser is-light" id="teaser-video">
+  <div class="container is-max-desktop">
+    <div class="hero-body" style="padding-bottom: 1.5rem;">
+      <figure style="margin: 0 auto 1.5rem; max-width: 1000px;">
+        <img src="static/images/overview.png"
+             alt="InSight overview: from human demonstrations and a novel task prompt, a VLM identifies the missing primitive and a steerable VLA autonomously acquires it via a data flywheel."
+             style="width:100%; height:auto; display:block;">
+      </figure>
+      <p class="is-size-5 has-text-centered line-tight" style="margin-bottom: 1rem; max-width: 760px; margin-left:auto; margin-right:auto;">
+        InSight makes a VLA <b>steerable at the primitive-action level</b>,<br>
+        then uses a VLM to identify and acquire the primitives a new task requires,<br>
+        with <b>no human demonstrations</b> of the target skill.
+      </p>
+      <div class="tags is-centered tldr-tags">
+        <span class="tag is-info is-light is-size-6"><b>Bottle pouring</b>: 96% vs 16% (CaP-X)</span>
+        <span class="tag is-info is-light is-size-6"><b>Twist-then-pour (14 primitives)</b>: 80% vs 4% (CaP-X)</span>
+        <span class="tag is-info is-light is-size-6"><b>Base skills retained</b>: 100%</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     ABSTRACT (formal, up top)
+     ============================================================ -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>
+            Vision-language-action (VLA) models can learn manipulation skills from demonstrations,
+            but their capabilities are bounded by the skills in the training data. We present
+            <b>InSight</b>, a framework that unlocks autonomous skill acquisition by rendering VLAs
+            steerable at the primitive-action level (e.g., &ldquo;move gripper to the bowl&rdquo;,
+            &ldquo;lift upward&rdquo;, &ldquo;pour the bottle&rdquo;). InSight consists of two primary
+            stages: (1)&nbsp;an automated segmentation pipeline that partitions demonstrations into
+            labeled primitives via VLM plan decomposition and end-effector poses to enable VLA
+            primitive steerability, and (2)&nbsp;a VLM-guided data flywheel that identifies missing
+            primitives required to accomplish a novel task, autonomously attempts demonstrations of
+            the missing primitives with VLM-proposed low-level control, and automatically labels, stores,
+            and integrates successful demonstrations into the VLA training set. We evaluate InSight
+            across simulation and real-world manipulation tasks, including block flipping, drawer
+            closing, sweeping, twisting, and pouring, without any human demonstrations of these
+            target skills. Once learned, these primitives can be composed to execute novel,
+            long-horizon tasks without additional human demonstrations. Our findings demonstrate that
+            primitive steerability provides a practical foundation for continual skill acquisition in
+            VLA policies.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     Overview video  (moved below the abstract)
+     ============================================================ -->
+<section class="section" id="overview-video" style="padding-top: 0;">
+  <div class="container is-max-desktop">
+    <video controls playsinline preload="metadata"
+           style="width:100%; height:auto; display:block;"
+           poster="static/images/overview_poster.jpg">
+      <source src="static/videos/insight_overview.mp4?v=3" type="video/mp4">
+    </video>
+    <p class="has-text-right" style="margin-top: 0.75rem;">
+      <span style="display:inline-flex; align-items:center; gap:0.45rem; font-size:0.8rem;
+            font-weight:600; letter-spacing:0.02em; color:#5b6471;
+            background:#f0eef0; border:1px solid #e3dfe3; border-radius:999px;
+            padding:0.32rem 0.85rem;">
+        <i class="fas fa-volume-up" style="color:#8C1515;"></i>Turn sound on
+      </span>
+    </p>
+  </div>
+</section>
+
+<!-- ============================================================
+     2. MOTIVATION + INSIGHT  ·  the problem and the key idea
+     ============================================================ -->
+<section class="section hero is-light">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 has-text-centered">Motivation</h2>
+    <div class="content has-text-justified" style="max-width: 850px; margin: 0 auto;">
+      <p>
+        Consider a robot on Mars, trained only to scoop rocks. When a
+        <a class="inline-link" href="https://www.nasa.gov/missions/insight/nasas-insight-waits-out-dust-storm/" target="_blank" rel="noopener">dust storm</a>
+        coats its solar panels, it must <i>sweep</i> them clean, a behavior it was never shown. A VLA can only perform the skills in
+        its demonstrations, and acquiring a new one, through more data or reinforcement learning, is costly
+        to repeat for every task.
+      </p>
+      <p>
+        Yet new skills are rarely fully novel: they recombine primitives the policy already knows. Sweeping
+        and scooping share approach and lowering, differing only in a lateral push; flipping a block reuses
+        pick-and-place's grasp-and-lift and adds a rotation. A standard VLA already encodes these
+        primitives, but entangles them in a single task instruction, so they cannot be steered individually.
+      </p>
+      <p>
+        InSight makes the primitives steerable and uses a VLM as an <b>active agent</b>, not just a
+        test-time planner over a fixed skill set, but one that flags the primitive a task is missing, drives
+        the robot to acquire it, and retrains it back into the policy. Acquired skills then persist and
+        recombine for future tasks, enabling continual learning.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     4. HOW IT WORKS  ·  pipeline + two stages
+     ============================================================ -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 has-text-centered">How InSight Works</h2>
+
+    <div class="columns is-multiline" style="margin-top: 1rem;">
+      <div class="column is-6">
+        <div class="box" style="height:100%;">
+          <span class="tag is-link is-light">Stage 1</span>
+          <h3 class="title is-5" style="margin:.6rem 0 .4rem;">Primitive steerability</h3>
+          <p class="is-size-6 has-text-grey-dark">
+            Human demonstrations are automatically segmented into primitive-labeled trajectories by aligning
+            a VLM-generated plan with gripper transitions and end-effector motion. Fine-tuning on these labels
+            produces a VLA that can be steered one primitive at a time.
+          </p>
+        </div>
+      </div>
+      <div class="column is-6">
+        <div class="box" style="height:100%;">
+          <span class="tag is-link is-light">Stage 2</span>
+          <h3 class="title is-5" style="margin:.6rem 0 .4rem;">Skill acquisition</h3>
+          <p class="is-size-6 has-text-grey-dark">
+            For a novel task, the VLM flags any primitive gap, drives a low-level controller to attempt it,
+            and verifies success with a VLM oracle. Successful rollouts are labeled, stored, and used to
+            retrain the VLA, forming a data flywheel that grows the skill set.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <figure class="image publication-banner" style="margin-top: 1.5rem;">
+      <img src="static/images/methods_stage1.png" alt="Stage 1: automatic primitive segmentation">
+    </figure>
+    <p class="has-text-grey is-size-7 has-text-centered">
+      <b>Stage 1.</b> A demonstration is split into labeled primitives using gripper-state and dominant-motion cues.
+    </p>
+
+    <figure class="image publication-banner" style="margin-top: 2rem;">
+      <img src="static/images/methods_stage2.png" alt="Stage 2: VLM-guided skill acquisition">
+    </figure>
+    <p class="has-text-grey is-size-7 has-text-centered">
+      <b>Stage 2.</b> The VLM identifies and parameterizes a missing primitive, the robot executes it, and a VLM oracle verifies success.
+    </p>
+
+    <p class="has-text-grey is-size-7 has-text-centered" style="margin-top: 1.5rem; max-width: 760px; margin-left: auto; margin-right: auto;">
+      <b>Implementation.</b> InSight fine-tunes a &pi;<sub>0.5</sub> VLA with LoRA, and uses Gemini 3 Flash as the
+      VLM across four roles: demonstration segmentation, task planning, primitive-gap proposal, and
+      image-based success checking. The framework is agnostic to the underlying VLA.
+    </p>
+  </div>
+</section>
+
+<!-- ============================================================
+     5. WATCH IT WORK  ·  acquire -> compose (climax)
+     ============================================================ -->
+<section class="section hero is-light">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 has-text-centered">Acquiring New Skills</h2>
+    <div class="content has-text-justified" style="max-width: 850px; margin: 0 auto 2.5rem;">
+      <p>
+        Each skill below is acquired with <b>no human demonstrations of that skill</b>. Starting from
+        demonstrations of a <i>different</i> task, InSight identifies the missing primitives, practices them,
+        and folds them back into the policy. On the left is what the robot was trained on; on the right is the
+        new skill it acquires.
+      </p>
+    </div>
+
+    <!-- Block flipping -->
+    <div class="box skill-task">
+      <h3 class="title is-5 has-text-centered" style="margin-bottom: 1.25rem;">
+        Block flipping <span class="has-text-grey has-text-weight-normal">from pick-and-place demos only &middot; 8&times; speed</span>
+      </h3>
+      <div class="columns is-vcentered is-variable is-2">
+        <div class="column demos-col">
+          <p class="skill-col-label">Trained on<small>pick-and-place</small></p>
+          <div class="media-slot">
+            <video controls autoplay muted loop playsinline preload="metadata">
+              <source src="static/videos/blockflip_demo.mp4?v=2" type="video/mp4">
+            </video>
+          </div>
+        </div>
+        <div class="column is-narrow has-text-centered"><span class="skill-arrow">&rarr;</span></div>
+        <div class="column acquired-col">
+          <p class="skill-col-label">Acquired (no human demos)<small>block flipping (rotate-block primitive)</small></p>
+          <div class="media-slot">
+            <video controls autoplay muted loop playsinline preload="metadata">
+              <source src="static/videos/blockflip_newskill.mp4?v=4" type="video/mp4">
+            </video>
+          </div>
+        </div>
+      </div>
+      <figure class="image" style="margin: 1.75rem auto 0.5rem; max-width: 520px;">
+        <img src="static/images/flip_iteration.svg" alt="Block-flip sample efficiency" style="width: 100%; display: block;">
+      </figure>
+      <p class="is-size-6 has-text-grey-dark has-text-centered" style="max-width: 640px; margin: 0 auto;">
+        With <i>no</i> human demonstrations of the flip, InSight practices the missing rotate-block primitive
+        and climbs to <b>75%</b> block-flip success over 479 rollouts. An RL baseline (SAC) given the same
+        budget never completes a flip (<b>0%</b>).
+      </p>
+    </div>
+
+    <!-- Drawer closing -->
+    <div class="box skill-task">
+      <h3 class="title is-5 has-text-centered" style="margin-bottom: 1.25rem;">
+        Drawer closing <span class="has-text-grey has-text-weight-normal">from drawer-opening demos only &middot; 6&times; speed</span>
+      </h3>
+      <div class="columns is-vcentered is-variable is-2">
+        <div class="column demos-col">
+          <p class="skill-col-label">Trained on<small>open drawer</small></p>
+          <div class="media-slot">
+            <video controls autoplay muted loop playsinline preload="metadata">
+              <source src="static/videos/drawer_open_demo.mp4?v=2" type="video/mp4">
+            </video>
+          </div>
+        </div>
+        <div class="column is-narrow has-text-centered"><span class="skill-arrow">&rarr;</span></div>
+        <div class="column acquired-col">
+          <p class="skill-col-label">Acquired (no human demos)<small>close drawer, from an out-of-distribution open start</small></p>
+          <div class="media-slot">
+            <video controls autoplay muted loop playsinline preload="metadata">
+              <source src="static/videos/drawer_close.mp4?v=2" type="video/mp4">
+            </video>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 3: Twisting, pouring, and composing them (real-world) -->
+    <div class="box skill-task">
+      <h3 class="title is-5 has-text-centered" style="margin-bottom: 0.25rem;">
+        Twisting, pouring, and composing them <span class="has-text-grey has-text-weight-normal">from pick-and-place demos only &middot; 4&times; speed</span>
+      </h3>
+      <p class="is-size-6 has-text-grey has-text-centered" style="margin-bottom: 1.5rem;">
+        Two real-world primitives acquired separately, then chained into a long-horizon task.
+      </p>
+
+      <p class="has-text-weight-bold has-text-centered is-size-6" style="margin-bottom: 0.6rem;">Twisting open a cap</p>
+      <div class="columns is-vcentered is-variable is-2">
+        <div class="column demos-col">
+          <p class="skill-col-label">Trained on<small>pick-and-place (top grasp)</small></p>
+          <div class="media-slot">
+            <video controls autoplay muted loop playsinline preload="metadata">
+              <source src="static/videos/twist_demo.mp4?v=2" type="video/mp4">
+            </video>
+          </div>
+        </div>
+        <div class="column is-narrow has-text-centered"><span class="skill-arrow">&rarr;</span></div>
+        <div class="column acquired-col">
+          <p class="skill-col-label">Acquired (no human demos)<small>twist open the bottle cap (new primitive: rotate cap)</small></p>
+          <div class="media-slot">
+            <video controls autoplay muted loop playsinline preload="metadata">
+              <source src="static/videos/twist_newskill.mp4?v=2" type="video/mp4">
+            </video>
+          </div>
+        </div>
+      </div>
+
+      <p class="has-text-weight-bold has-text-centered is-size-6" style="margin: 1.75rem 0 0.6rem;">Pouring</p>
+      <div class="columns is-vcentered is-variable is-2">
+        <div class="column demos-col">
+          <p class="skill-col-label">Trained on<small>pick-and-place (side grasp)</small></p>
+          <div class="media-slot">
+            <video controls autoplay muted loop playsinline preload="metadata">
+              <source src="static/videos/pour_demo.mp4?v=2" type="video/mp4">
+            </video>
+          </div>
+        </div>
+        <div class="column is-narrow has-text-centered"><span class="skill-arrow">&rarr;</span></div>
+        <div class="column acquired-col">
+          <p class="skill-col-label">Acquired (no human demos)<small>pouring (new primitives: tilt to pour, tilt upright)</small></p>
+          <div class="media-slot">
+            <video controls autoplay muted loop playsinline preload="metadata">
+              <source src="static/videos/pour_newskill.mp4?v=2" type="video/mp4">
+            </video>
+          </div>
+        </div>
+      </div>
+
+      <p class="has-text-weight-bold has-text-centered is-size-6" style="margin: 1.75rem 0 0.3rem;">Composing into a long-horizon task</p>
+      <p class="has-text-centered is-size-7 has-text-grey" style="max-width: 720px; margin: 0 auto 0.8rem;">
+        The separately acquired twist and pour skills chain into a 14-primitive task with no end-to-end demonstration.
+      </p>
+      <figure class="image publication-banner" style="max-width: 900px; margin: 0 auto 0.4rem;">
+        <video controls autoplay muted loop playsinline preload="metadata" style="width:100%; border-radius:12px;">
+          <source src="static/videos/twist_then_pour.mp4?v=2" type="video/mp4">
+        </video>
+      </figure>
+      <p class="has-text-centered is-size-7"><b>Twist-then-pour:</b> 14 primitives chained from the separately acquired twist and pour skills.</p>
+
+      <hr style="margin: 2rem 0 1.5rem; background:#e6e6e6; height:1px;">
+
+      <figure class="image" style="margin: 0 auto 0.5rem; max-width: 860px;">
+        <img src="static/images/per_primitive.svg" alt="Per-primitive success rates" style="width: 100%; display: block;">
+      </figure>
+      <div class="columns is-centered" style="margin-bottom: 1.75rem;">
+        <div class="column is-three-fifths">
+          <p class="is-size-6 has-text-grey-dark has-text-centered">
+            High per-primitive reliability compounds into <b>92%</b> success on twisting, <b>96%</b> on
+            pouring, and <b>80%</b> on the 14-primitive twist-then-pour composition, versus 32% / 16% / 4%
+            for CaP-X and <b>0%</b> even for a &pi;<sub>0.5</sub> baseline fine-tuned on the same demonstrations.
+          </p>
+        </div>
+      </div>
+
+      <figure class="image" style="margin: 0 auto 0.5rem; max-width: 620px;">
+        <img src="static/images/efficiency.svg" alt="Per-trial time breakdown vs CaP-X" style="width: 100%; display: block;">
+      </figure>
+      <div class="columns is-centered" style="margin-bottom: 1.75rem;">
+        <div class="column is-three-fifths">
+          <p class="is-size-6 has-text-grey-dark has-text-centered">
+            Because acquired primitives run as <i>known</i> skills, InSight spends far less VLM thinking time
+            than a zero-shot planner: it finishes twisting in <b>55&nbsp;s</b> vs 109&nbsp;s and pouring in
+            <b>124&nbsp;s</b> vs 207&nbsp;s against CaP-X, roughly <b>2&times; faster</b> per trial.
+          </p>
+        </div>
+      </div>
+
+      <figure class="image" style="margin: 0 auto 0.5rem; max-width: 320px;">
+        <img src="static/images/retention.svg" alt="Base skill retention" style="width: 100%; display: block;">
+      </figure>
+      <div class="columns is-centered">
+        <div class="column is-three-fifths">
+          <p class="is-size-6 has-text-grey-dark has-text-centered">
+            After adding the twist and pour primitives, the unified VLA retains <b>100%</b> on its original
+            pick-and-place skills, and even improves top-grasp pick-and-place from 86% to <b>100%</b>.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 4: Sweeping (the motivating Mars scenario), as the closing task -->
+    <div class="box skill-task">
+      <h3 class="title is-5 has-text-centered" style="margin-bottom: 0.25rem;">
+        Sweeping <span class="has-text-grey has-text-weight-normal">from scooping demos only &middot; 4&times; speed</span>
+      </h3>
+      <p class="is-size-6 has-text-grey has-text-centered" style="margin-bottom: 1.1rem;">
+        The motivating scenario: a contact-rich, non-prehensile skill acquired with no sweeping demonstrations.
+      </p>
+      <div class="columns is-vcentered is-variable is-2">
+        <div class="column demos-col">
+          <p class="skill-col-label">Trained on<small>scooping</small></p>
+          <div class="media-slot">
+            <video controls autoplay muted loop playsinline preload="metadata">
+              <source src="static/videos/scoop_demo.mp4?v=3" type="video/mp4">
+            </video>
+          </div>
+        </div>
+        <div class="column is-narrow has-text-centered"><span class="skill-arrow">&rarr;</span></div>
+        <div class="column acquired-col">
+          <p class="skill-col-label">Acquired (no human demos)<small>sweeping (new primitive: lateral push)</small></p>
+          <div class="media-slot">
+            <video controls autoplay muted loop playsinline preload="metadata">
+              <source src="static/videos/sweep_newskill.mp4?v=3" type="video/mp4">
+            </video>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notification is-light is-info">
+      Using the VLM to acquire and reintegrate primitives, rather than only to plan over existing ones
+      at test time, lets the VLA <b>extend its own skill set</b> and compose the result while retaining
+      prior skills.
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     7. CONCLUSION
+     ============================================================ -->
+<section class="section hero is-light">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 has-text-centered">Conclusion</h2>
+    <div class="content has-text-justified" style="max-width: 850px; margin: 0 auto;">
+      <p>
+        InSight makes the individual primitives of a VLA steerable, which lets a VLM identify the primitives a
+        new task needs, acquire the ones the policy is missing, and recombine them. A robot can extend itself
+        to new tasks without demonstrations of the target skill, and the primitives it acquires can be reused
+        on later tasks.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     ACKNOWLEDGMENTS
+     ============================================================ -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <h2 class="title is-4 has-text-centered">Acknowledgments</h2>
+    <div class="content has-text-justified" style="max-width: 760px; margin: 0 auto;">
+      <p class="is-size-6 has-text-grey-dark">
+        We thank Joseph Bowkett and Daniel Pastor for valuable discussions and for providing the 3D-printed
+        scooper for the xArm. M. Wang is supported by the NASA NSTGRO Fellowship, and S. Tian was supported by
+        the NSF GRFP.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     BIBTEX
+     ============================================================ -->
+<section class="section" id="BibTeX">
+  <div class="container is-max-desktop content">
+    <div class="bibtex-header">
+      <h2 class="title">BibTeX</h2>
+      <button class="copy-bibtex-btn" onclick="copyBibTeX()" title="Copy BibTeX to clipboard">
+        <i class="fas fa-copy"></i><span class="copy-text">Copy</span>
+      </button>
+    </div>
+    <pre id="bibtex-code"><code>@misc{wang2026insight,
+  title         = {InSight: Self-Guided Skill Acquisition via Steerable VLAs},
+  author        = {Wang, Maggie and Osterberg, Lars and Tian, Stephen and
+                   Shorinwa, Ola and Wu, Jiajun and Schwager, Mac},
+  year          = {2026},
+  eprint        = {2606.24884},
+  archivePrefix = {arXiv}
+}</code></pre>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content">
+          <p>
+            This page was built using the <a href="https://github.com/eliahuhorwitz/Academic-project-page-template" target="_blank">Academic Project Page Template</a>
+            which was adopted from the <a href="https://nerfies.github.io" target="_blank">Nerfies</a> project page.
+            You are free to borrow the source code of this website, we just ask that you link back to this page in the footer. <br>
+            This website is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">Creative
+            Commons Attribution-ShareAlike 4.0 International License</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<button class="scroll-to-top" onclick="scrollToTop()" aria-label="Scroll to top">
+  <i class="fas fa-arrow-up"></i>
+</button>
+
+</body>
+</html>
