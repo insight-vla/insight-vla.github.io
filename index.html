@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Primary Meta Tags -->
+  <meta name="title" content="InSight: Self-Guided Skill Acquisition via Steerable VLAs - Maggie Wang, Lars Osterberg, Stephen Tian, Ola Shorinwa, Joseph Bowkett, Daniel Pastor, Jiajun Wu, Mac Schwager" />
+  <meta name="description" content="InSight makes vision-language-action (VLA) models steerable at the primitive-action level and uses that steerability to autonomously acquire and compose new manipulation skills, without human demonstrations of the target skills.">
+  <meta name="keywords" content="vision-language-action models, VLA, VLM, robotic manipulation, skill acquisition, primitive steerability, imitation learning, robot learning">
+  <meta name="author" content="Maggie Wang, Lars Osterberg, Stephen Tian, Ola Shorinwa, Joseph Bowkett, Daniel Pastor, Jiajun Wu, Mac Schwager">
+  <meta name="robots" content="index, follow">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Stanford Multi-Robot Systems Lab">
+  <meta property="og:title" content="InSight: Self-Guided Skill Acquisition via Steerable VLAs">
+  <meta property="og:description" content="Making VLAs steerable at the primitive level to autonomously acquire and compose new manipulation skills.">
+  <meta property="og:image" content="static/images/overview.png">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="InSight: Self-Guided Skill Acquisition via Steerable VLAs">
+  <meta name="twitter:description" content="Making VLAs steerable at the primitive level to autonomously acquire and compose new manipulation skills.">
+  <meta name="twitter:image" content="static/images/overview.png">
+
+  <meta name="theme-color" content="#8C1515">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&display=swap" rel="stylesheet">
+
+  <title>InSight: Self-Guided Skill Acquisition via Steerable VLAs | Stanford Multi-Robot Systems Lab</title>
+
+  <!-- Favicon (static logo) -->
+  <link rel="icon" type="image/png" sizes="32x32" href="static/images/favicon-32.png">
+  <link rel="icon" type="image/png" href="static/images/favicon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="static/images/apple-touch-icon.png">
+
+  <!-- Critical CSS -->
+  <link rel="stylesheet" href="static/css/bulma.min.css">
+  <link rel="stylesheet" href="static/css/index.css">
+
+  <!-- Title-row offset: shift logo+title unit left so the title text sits near
+       page center (logo overhangs left). Disabled on narrow screens. -->
+  <style>
+    /* Two full grid-montage clips side by side, shown uncropped at native aspect */
+    .dual-grid { position: relative; width: 100vw; margin-left: 50%; transform: translateX(-50%);
+      display: flex; background: #0c0c0d; }
+    .dual-grid .dg-pane { flex: 1 1 50%; aspect-ratio: 16 / 9; overflow: hidden; position: relative; }
+    .dual-grid .dg-pane:first-child { border-right: 3px solid rgba(255,255,255,0.92); }
+    .dual-grid video { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .dg-badge { position: absolute; left: 50%; bottom: 1rem; transform: translateX(-50%);
+      z-index: 2; display: inline-flex; align-items: center; gap: 0.5rem; white-space: normal;
+      text-align: center; max-width: 92%; line-height: 1.3;
+      font-size: 0.8rem; font-weight: 700; letter-spacing: 0.01em; color: #fff;
+      background: rgba(20,20,22,0.6); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+      border: 1px solid rgba(255,255,255,0.22); border-radius: 16px; padding: 0.5rem 1rem; }
+    .dg-badge .dot { width: 7px; height: 7px; border-radius: 50%; flex: 0 0 auto; }
+    .dg-badge.demo .dot { background: #9aa3ad; }
+    .dg-badge.acquired .dot { background: #ff6b5b; box-shadow: 0 0 8px rgba(255,107,91,0.8); }
+    @media screen and (max-width: 760px) {
+      .dual-grid { flex-direction: column; }
+      .dual-grid .dg-pane:first-child { border-right: none; border-bottom: 3px solid rgba(255,255,255,0.92); }
+      .dg-badge { font-size: 0.7rem; padding: 0.34rem 0.8rem; bottom: 0.6rem; white-space: normal; text-align: center; max-width: 90%; }
+    }
+
+    .title-row { transform: translateX(-42px); }
+    /* Tighten hero vertical rhythm (override index.css margins) */
+    .publication-title { margin-bottom: 0 !important; }
+    .publication-authors { margin-bottom: 0 !important; color: #00548f; }
+    .publication-authors a { color: #00548f !important; }
+    /* In-prose links: clearly a link, on-brand, not loud */
+    .inline-link, .content a.inline-link { color: #1f6fb2 !important;
+      text-decoration: none; text-underline-offset: 2px;
+      transition: color .15s; }
+    .inline-link:hover, .content a.inline-link:hover { color: #155a92 !important;
+      text-decoration: underline; text-decoration-color: rgba(31,111,178,0.5); }
+
+    /* Skill-acquisition: demos -> new-skill rows */
+    .skill-task { margin-bottom: 1.5rem; }
+    .media-slot { border-radius: 12px; overflow: hidden; line-height: 0; }
+    .media-slot video { width: 100%; display: block; border-radius: 12px; }
+    .placeholder-slot { display: flex; flex-direction: column; align-items: center;
+      justify-content: center; aspect-ratio: 4 / 3; border: 2px dashed #c9b8b8;
+      border-radius: 12px; background: #faf5f5; color: #9c8a8a; text-align: center;
+      padding: 1rem; font-size: 0.9rem; line-height: 1.45; }
+    .placeholder-slot .ph-tag { font-weight: 700; letter-spacing: 0.1em; color: #b07f7e; margin-bottom: 0.4rem; }
+    .placeholder-slot code { background: rgba(140,21,21,0.07); color: #8C1515;
+      padding: 0.1rem 0.35rem; border-radius: 5px; font-size: 0.8rem; margin-top: 0.3rem; }
+    .skill-col-label { text-align: center; font-weight: 700; margin-bottom: 0.5rem; }
+    .demos-col .skill-col-label { color: #555; }
+    .acquired-col .skill-col-label { color: #8C1515; }
+    .skill-col-label small { display: block; font-weight: 400; color: #8a8a8a;
+      font-size: 0.8rem; margin-top: 0.15rem; }
+    .skill-arrow { font-size: 1.8rem; color: #8C1515; font-weight: 700; }
+    @media screen and (max-width: 768px) { .skill-arrow { display: inline-block; transform: rotate(90deg); } }
+    @media screen and (max-width: 900px) {
+      .title-row { transform: none; }
+      .publication-title { font-size: 2.1rem !important; }
+    }
+    /* Phones / small tablets: stack the logo above the title so the text can wrap */
+    @media screen and (max-width: 768px) {
+      .title-row {
+        display: flex !important; flex-direction: column !important;
+        align-items: center !important; transform: none !important;
+        width: 100% !important; gap: 0.3rem !important; text-align: center !important;
+      }
+      .title-row img { margin-top: 0 !important; width: 92px !important; }
+      .publication-title {
+        flex: 0 1 auto !important; max-width: 100% !important; text-align: center !important;
+      }
+      /* teaser: let long result tags wrap and shrink the pitch so nothing overflows */
+      .tldr-tags .tag { white-space: normal !important; height: auto !important; font-size: 0.75rem !important; }
+      #teaser-video .line-tight { font-size: 1.1rem !important; }
+    }
+    @media screen and (max-width: 620px) {
+      .publication-title { font-size: 1.7rem !important; }
+    }
+    @media screen and (max-width: 400px) {
+      .publication-title { font-size: 1.45rem !important; }
+    }
+
+    /* ---- Polish: smooth anchors + sticky mini-nav ---- */
+    html { scroll-behavior: smooth; }
+    #site-nav { position: sticky; top: 0; z-index: 40;
+      background: rgba(255,255,255,0.82); backdrop-filter: saturate(180%) blur(10px);
+      -webkit-backdrop-filter: saturate(180%) blur(10px); border-bottom: 1px solid #ececec; }
+    .site-nav-inner { max-width: 1000px; margin: 0 auto; display: flex; align-items: center;
+      justify-content: space-between; padding: 0.5rem 1.1rem; }
+    .site-nav-brand { font-weight: 800; color: #8C1515; font-size: 1.05rem; letter-spacing: -0.01em; }
+    .site-nav-brand { flex: 0 0 auto; }
+    .site-nav-links { display: flex; align-items: center; min-width: 0; overflow-x: auto;
+      white-space: nowrap; scrollbar-width: none; }
+    .site-nav-links::-webkit-scrollbar { display: none; }
+    .site-nav-links a { color: #556; font-weight: 600; font-size: 0.9rem; margin-left: 1.3rem;
+      transition: color .15s; flex: 0 0 auto; }
+    .site-nav-links a:hover { color: #8C1515; }
+    h2.title[id], section[id] { scroll-margin-top: 64px; }
+    @media screen and (max-width: 700px) {
+      .site-nav-links a { margin-left: 0.85rem; font-size: 0.8rem; }
+      .site-nav-brand { font-size: 0.95rem; }
+    }
+
+    /* ---- Polish: headline stat strip ---- */
+    .stat-strip { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.8rem;
+      max-width: 840px; margin: 0.25rem auto 0; }
+    .stat-card { flex: 1 1 175px; max-width: 200px; background: #fff; border: 1px solid #ececec;
+      border-radius: 14px; padding: 0.9rem 0.7rem; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      transition: transform .15s ease, box-shadow .15s ease; }
+    .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.09); }
+    .stat-num { font-size: 2rem; font-weight: 800; line-height: 1;
+      background: linear-gradient(90deg,#8C1515,#C8442E); -webkit-background-clip: text;
+      background-clip: text; -webkit-text-fill-color: transparent; }
+    .stat-label { margin-top: 0.4rem; font-size: 0.86rem; font-weight: 700; color: #333; line-height: 1.2; }
+    .stat-label span { display: block; font-weight: 500; font-size: 0.72rem; color: #8a8a8a; margin-top: 0.15rem; }
+    @media screen and (max-width: 520px) {
+      .stat-card { flex-basis: 138px; padding: 0.7rem 0.45rem; }
+      .stat-num { font-size: 1.55rem; }
+      .stat-label { font-size: 0.78rem; }
+    }
+
+    /* ---- Left progress rail (scroll-spy) ---- */
+    .progress-rail { position: fixed; left: 30px; top: 50%; transform: translateY(-50%);
+      z-index: 45; display: none; }
+    .rail-track { position: relative; display: flex; flex-direction: column; gap: 1.5rem; }
+    .rail-line, .rail-fill { position: absolute; left: 6px; width: 2px; border-radius: 2px; }
+    .rail-line { top: 6px; bottom: 6px; background: #e4e4e4; }
+    .rail-fill { top: 6px; height: 0; background: linear-gradient(#8C1515,#C8442E);
+      transition: height .2s ease; }
+    .rail-item { position: relative; display: flex; align-items: center; gap: 0.65rem;
+      color: #a2a7ad; font-weight: 600; font-size: 0.82rem; letter-spacing: 0.01em; z-index: 1;
+      transition: color .15s ease; }
+    .rail-dot { width: 14px; height: 14px; border-radius: 50%; background: #d3d6da;
+      border: 3px solid #fff; box-shadow: 0 0 0 1px #dcdcdc; flex: 0 0 auto; transition: all .18s ease; }
+    .rail-label { white-space: nowrap; opacity: 0; transform: translateX(-6px);
+      transition: opacity .18s ease, transform .18s ease; }
+    .progress-rail:hover .rail-label { opacity: 1; transform: none; }
+    .rail-item:hover { color: #8C1515; }
+    .rail-item.is-active { color: #8C1515; }
+    .rail-item.is-active .rail-label { opacity: 1; transform: none; }
+    .rail-item.is-active .rail-dot { background: #8C1515; border-color: #fff;
+      box-shadow: 0 0 0 4px rgba(140,21,21,0.14); }
+    /* Show the rail only when the viewport is wide enough to clear the centered content;
+       below that, fall back to the sticky top nav. */
+    @media screen and (min-width: 1300px) {
+      .progress-rail { display: block; }
+      #site-nav { display: none; }
+    }
+
+    /* ================= MODERN REFRESH ================= */
+    :root {
+      --bg: #fafaf9; --surface: #ffffff; --ink: #17181a; --ink-soft: #5c626b;
+      --line: #ececec; --accent: #8C1515; --accent-2: #C8442E; --radius: 16px;
+    }
+    html { font-size: 16.5px; scroll-behavior: smooth; }
+    body { background: var(--bg) !important; color: var(--ink);
+      -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+    /* Retire the flat Bulma gray bands — one calm surface system */
+    .hero.is-light, .section.hero.is-light, .hero.teaser.is-light,
+    section.section, section.hero { background: transparent !important; }
+    /* Type hierarchy */
+    .content, p, .is-size-5, .is-size-6 { color: #2b2e33; }
+    .content { line-height: 1.72; }
+    .title { color: var(--ink) !important; letter-spacing: -0.021em; font-weight: 800; }
+    h2.title.is-3 { font-size: 2.15rem; font-weight: 800; letter-spacing: -0.028em; }
+    h3.title.is-5 { font-weight: 700; letter-spacing: -0.015em; }
+    section.section { padding-top: 4.25rem; padding-bottom: 4.25rem; }
+    /* Refined heading accent bar (replaces the stock gradient underline) */
+    h2.title.is-3.has-text-centered { position: relative; padding-bottom: 0.7rem; margin-bottom: 1.6rem; }
+    h2.title.is-3.has-text-centered::after { content: ""; position: absolute; left: 50%; bottom: 0;
+      transform: translateX(-50%); width: 46px; height: 3px; border-radius: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+    /* Cards & surfaces */
+    .box, .skill-task { background: var(--surface) !important; border: 1px solid var(--line);
+      border-radius: var(--radius); box-shadow: 0 1px 2px rgba(20,20,30,0.03), 0 10px 34px rgba(20,20,30,0.045);
+      padding: 1.75rem; }
+    .notification { border-radius: var(--radius) !important; border: 1px solid var(--line); }
+    .notification.is-info.is-light { background: #f4f6f9 !important; color: #333 !important; }
+    /* Buttons → pill, modern ink, lift on hover */
+    .button.is-dark, .external-link.button.is-dark { background: #17181a !important; border-color: #17181a !important;
+      border-radius: 999px !important; font-weight: 600; letter-spacing: 0.005em;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.12); transition: transform .16s ease, box-shadow .16s ease, background .16s ease; }
+    .button.is-dark:hover, .external-link.button.is-dark:hover { transform: translateY(-2px);
+      background: #000 !important; box-shadow: 0 10px 22px rgba(0,0,0,0.22); }
+    /* Figures: soft rounded framing */
+    figure.image.publication-banner img { border-radius: 12px; }
+    /* Tags (twist-then-pour caption chips etc.) */
+    .tag.is-info.is-light { background: #eef2f7; color: #2f5d86; border-radius: 8px; }
+    /* Sticky top nav on the modern base */
+    #site-nav { background: rgba(250,250,249,0.8) !important; }
+    /* Scroll-reveal (JS adds .reveal / .in) */
+    .reveal { opacity: 0; transform: translateY(20px); transition: opacity .7s cubic-bezier(.2,.6,.2,1),
+      transform .7s cubic-bezier(.2,.6,.2,1); will-change: opacity, transform; }
+    .reveal.in { opacity: 1; transform: none; }
+    @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1 !important; transform: none !important; } }
+  </style>
+
+  <!-- Non-critical CSS -->
+  <link rel="preload" href="static/css/bulma-carousel.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="static/css/bulma-slider.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="static/css/fontawesome.all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link rel="stylesheet" href="static/css/bulma-carousel.min.css">
+    <link rel="stylesheet" href="static/css/bulma-slider.min.css">
+    <link rel="stylesheet" href="static/css/fontawesome.all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  </noscript>
+
+  <script defer src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="static/js/fontawesome.all.min.js"></script>
+  <script defer src="static/js/bulma-carousel.min.js"></script>
+  <script defer src="static/js/bulma-slider.min.js"></script>
+  <script defer src="static/js/index.js"></script>
+</head>
+<body>
+
+<!-- Sticky mini-nav -->
+<nav id="site-nav">
+  <div class="site-nav-inner">
+    <a class="site-nav-brand" href="#main-content">InSight</a>
+    <div class="site-nav-links">
+      <a href="#abstract">Abstract</a>
+      <a href="#motivation">Motivation</a>
+      <a href="#method">Method</a>
+      <a href="#results">Results</a>
+      <a href="#conclusion">Conclusion</a>
+      <a href="#BibTeX">BibTeX</a>
+    </div>
+  </div>
+</nav>
+
+<!-- Left progress rail (scroll-spy, wide screens) -->
+<nav class="progress-rail" aria-label="Page progress">
+  <div class="rail-track">
+    <span class="rail-line"></span>
+    <span class="rail-fill"></span>
+    <a class="rail-item is-active" href="#abstract"   data-sec="abstract"><span class="rail-dot"></span><span class="rail-label">Abstract</span></a>
+    <a class="rail-item"           href="#motivation" data-sec="motivation"><span class="rail-dot"></span><span class="rail-label">Motivation</span></a>
+    <a class="rail-item"           href="#method"     data-sec="method"><span class="rail-dot"></span><span class="rail-label">Method</span></a>
+    <a class="rail-item"           href="#results"    data-sec="results"><span class="rail-dot"></span><span class="rail-label">Results</span></a>
+    <a class="rail-item"           href="#conclusion" data-sec="conclusion"><span class="rail-dot"></span><span class="rail-label">Conclusion</span></a>
+    <a class="rail-item"           href="#BibTeX"     data-sec="BibTeX"><span class="rail-dot"></span><span class="rail-label">BibTeX</span></a>
+  </div>
+</nav>
+
+<!-- ============================================================
+     HERO  ·  title / authors / links
+     ============================================================ -->
+<main id="main-content">
+  <section class="hero">
+    <div class="hero-body">
+      <div class="container is-max-desktop">
+        <div class="columns is-centered">
+          <div class="column has-text-centered">
+
+            <!-- Title row (logo + title) -->
+            <div class="title-row" style="display:inline-flex; align-items:flex-start; gap: 0.15rem;
+                        text-align:left; margin: 0 auto 0.5rem;">
+              <img src="static/images/insight_logo_scan.gif" alt="InSight logo"
+                   style="width: 110px; height: auto; flex: 0 0 auto; margin-top: -12px;" />
+              <h1 class="title publication-title"
+                  style="font-size: 2.9rem; font-weight: 700; line-height: 1.18; margin: 0; text-align: center; flex: 0 0 auto;">
+                <span style="font-weight: 900; letter-spacing: -0.5px;
+                      background: linear-gradient(90deg, #8C1515 0%, #C8442E 100%);
+                      -webkit-background-clip: text; background-clip: text;
+                      -webkit-text-fill-color: transparent;">InSight</span>:
+                Self-Guided Skill Acquisition<br>via Steerable VLAs
+              </h1>
+            </div>
+
+            <div class="is-size-5 publication-authors has-text-centered" style="margin-top: 0.9rem;">
+              <span class="author-block"><a href="https://maggiewang.org/" target="_blank" rel="noopener">Maggie Wang</a><sup>1</sup>,</span>
+              <span class="author-block"><a href="https://msl.stanford.edu/people/larsosterberg" target="_blank" rel="noopener">Lars Osterberg</a><sup>1</sup>,</span>
+              <span class="author-block"><a href="https://s-tian.github.io/" target="_blank" rel="noopener">Stephen Tian</a><sup>1</sup>,</span>
+              <span class="author-block"><a href="https://insight-vla.github.io/" rel="noopener">Ola Shorinwa</a><sup>2</sup>,</span>
+              <br>
+              <span class="author-block"><a href="https://joseph-bowkett.com/" target="_blank" rel="noopener">Joseph Bowkett</a><sup>3</sup>,</span>
+              <span class="author-block"><a href="https://robotics.jpl.nasa.gov/who-we-are/people/daniel-pastor-moreno/" target="_blank" rel="noopener">Daniel Pastor</a><sup>3</sup>,</span>
+              <span class="author-block"><a href="https://jiajunwu.com/" target="_blank" rel="noopener">Jiajun Wu</a><sup>1</sup>,</span>
+              <span class="author-block"><a href="https://profiles.stanford.edu/mac-schwager/" target="_blank" rel="noopener">Mac Schwager</a><sup>1</sup></span>
+            </div>
+
+            <div class="is-size-6 affiliations has-text-centered" style="margin-top: 0.35rem;">
+              <span class="affil-block"><sup>1</sup> Stanford University</span>&nbsp;&nbsp;&nbsp;
+              <span class="affil-block"><sup>2</sup> Princeton University</span>&nbsp;&nbsp;&nbsp;
+              <span class="affil-block"><sup>3</sup> NASA Jet Propulsion Laboratory</span>
+            </div>
+
+            <div class="column has-text-centered" style="margin-top: 1rem; padding-top: 0;">
+              <div class="publication-links">
+                <span class="link-block">
+                  <a href="https://arxiv.org/pdf/2606.24884" target="_blank" rel="noopener"
+                     class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon"><i class="fas fa-file-pdf"></i></span><span>Paper</span>
+                  </a>
+                </span>
+                <span class="link-block">
+                  <a href="https://github.com/insight-vla/insight" target="_blank" rel="noopener"
+                     class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon"><i class="fab fa-github"></i></span><span>Code</span>
+                  </a>
+                </span>
+                <span class="link-block">
+                  <a href="https://x.com/maggi3wang/status/2072344797709521219" target="_blank" rel="noopener"
+                     class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon"><i class="fab fa-twitter"></i></span><span>Twitter</span>
+                  </a>
+                </span>
+                <span class="link-block">
+                  <a href="https://arxiv.org/abs/2606.24884" target="_blank" rel="noopener"
+                     class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon"><i class="ai ai-arxiv"></i></span><span>arXiv</span>
+                  </a>
+                </span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+
+<!-- ============================================================
+     1. HOOK  ·  overview figure + one-line pitch
+     ============================================================ -->
+<section class="hero teaser is-light" id="teaser-video">
+  <div class="container is-max-desktop">
+    <div class="hero-body" style="padding-bottom: 1.5rem;">
+      <figure style="margin: 0 auto 1.5rem; max-width: 1000px;">
+        <img src="static/images/overview.png"
+             alt="InSight overview: from human demonstrations and a novel task prompt, a VLM identifies the missing primitive and a steerable VLA autonomously acquires it via a data flywheel."
+             style="width:100%; height:auto; display:block;">
+      </figure>
+      <p class="is-size-5 has-text-centered line-tight" style="margin-bottom: 1rem; max-width: 760px; margin-left:auto; margin-right:auto;">
+        InSight makes a VLA <b>steerable at the primitive-action level</b>,<br>
+        then uses a VLM to identify and acquire the primitives a new task requires,<br>
+        with <b>no human demonstrations</b> of the target skill.
+      </p>
+      <div class="stat-strip">
+        <div class="stat-card">
+          <div class="stat-num">96%</div>
+          <div class="stat-label">Bottle pouring<span>vs 16% for CaP-X</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">80%</div>
+          <div class="stat-label">Twist-then-pour<span>14 primitives · vs 4%</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">100%</div>
+          <div class="stat-label">Base skills retained<span>on base pick-and-place</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">0</div>
+          <div class="stat-label">Human demos<span>of the target skills</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     Two full task-grid clips side by side, shown uncropped
+     ============================================================ -->
+<section class="dual-grid" aria-label="InSight skill acquisition across tasks">
+  <div class="dg-pane">
+    <video autoplay muted loop playsinline preload="metadata">
+      <source src="static/videos/insight-twitter (32).mp4" type="video/mp4">
+    </video>
+    <span class="dg-badge demo"><span class="dot"></span>VLA trained on human demonstrations</span>
+  </div>
+  <div class="dg-pane">
+    <video autoplay muted loop playsinline preload="metadata">
+      <source src="static/videos/insight-twitter-31-aligned.mp4" type="video/mp4">
+    </video>
+    <span class="dg-badge acquired"><span class="dot"></span>VLA capable of new skills, acquired by InSight</span>
+  </div>
+</section>
+
+<!-- ============================================================
+     ABSTRACT (formal, up top)
+     ============================================================ -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3" id="abstract">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>
+            Vision-language-action (VLA) models excel at robot manipulation via imitation learning,
+            but adapting them to new tasks often requires additional human demonstrations, which can
+            be costly or infeasible. Meanwhile, vision-language models (VLMs) offer semantic task
+            understanding but lack the physical grounding required for execution. To bridge this gap,
+            we present <b>InSight</b>, a framework for self-guided skill acquisition that uses a VLM to
+            identify primitives missing from a VLA's repertoire, grounds the VLM's proposals through
+            robot execution, and distills new primitives from successful rollouts into the VLA.
+            Primitive steerability, the ability to execute and terminate primitives on
+            command, enables the robot to reuse known primitives while collecting training data
+            for missing primitives without requiring full-task human demonstrations for each new task.
+            InSight has two stages: (1)&nbsp;a VLM automatically segments existing demonstrations into
+            primitive-labeled trajectories to fine-tune a primitive-steerable VLA, and (2)&nbsp;the VLM
+            plans a sequence of known primitives executed by the VLA and new primitives attempted by
+            VLM-parameterized low-level controllers. New-primitive segments from successful task
+            rollouts are added to the training data, and the VLA is retrained. The adapted VLA can then
+            reliably execute new skills using the acquired primitives, without per-primitive VLM calls.
+            We evaluate InSight on six simulated and real-world tasks with no human demonstrations of
+            target skills, including block flipping, drawer closing, sweeping, twisting, and pouring.
+            On hardware, acquired twisting and pouring skills achieve 92% and 96% success, versus 32%
+            and 16% for a zero-shot CaP-X baseline. Composing both skills into a 14-primitive task
+            achieves 80% success with no combined-task demonstrations.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     Overview video  (moved below the abstract)
+     ============================================================ -->
+<section class="section" id="overview-video" style="padding-top: 0;">
+  <div class="container is-max-desktop">
+    <video controls playsinline preload="metadata"
+           style="width:100%; height:auto; display:block; border-radius:12px; box-shadow:0 6px 24px rgba(0,0,0,0.12);"
+           poster="static/images/overview_poster.jpg">
+      <source src="static/videos/insight_overview.mp4?v=5" type="video/mp4">
+    </video>
+    <p class="has-text-right" style="margin-top: 0.75rem;">
+      <span style="display:inline-flex; align-items:center; gap:0.45rem; font-size:0.8rem;
+            font-weight:600; letter-spacing:0.02em; color:#5b6471;
+            background:#f0eef0; border:1px solid #e3dfe3; border-radius:999px;
+            padding:0.32rem 0.85rem;">
+        <i class="fas fa-volume-up" style="color:#8C1515;"></i>Turn sound on
+      </span>
+    </p>
+  </div>
+</section>
+
+<!-- ============================================================
+     2. MOTIVATION + INSIGHT  ·  the problem and the key idea
+     ============================================================ -->
+<section class="section hero is-light">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 has-text-centered" id="motivation">Motivation</h2>
+    <div class="content has-text-justified" style="max-width: 850px; margin: 0 auto;">
+      <p>
+        Consider a robot on Mars, trained only to scoop rocks. When a
+        <a class="inline-link" href="https://www.nasa.gov/missions/insight/nasas-insight-waits-out-dust-storm/" target="_blank" rel="noopener">dust storm</a>
+        coats its solar panels, it must <i>sweep</i> them clean, a behavior it was never shown. A VLA can only perform the skills in
+        its demonstrations, and acquiring a new one, through more data or reinforcement learning, is costly
+        to repeat for every task.
+      </p>
+      <p>
+        Yet new skills are rarely fully novel: they recombine primitives the policy already knows. Sweeping
+        and scooping share approach and lowering, differing only in a lateral push; flipping a block reuses
+        pick-and-place's grasp-and-lift and adds a rotation. A standard VLA already encodes these
+        primitives, but entangles them in a single task instruction, so they cannot be steered individually.
+      </p>
+      <p>
+        InSight makes the primitives steerable and uses a VLM as an <b>active agent</b>, not just a
+        test-time planner over a fixed skill set, but one that flags the primitive a task is missing, drives
+        the robot to acquire it, and retrains it back into the policy. Acquired skills then persist and
+        recombine for future tasks, enabling continual learning.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     4. HOW IT WORKS  ·  pipeline + two stages
+     ============================================================ -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 has-text-centered" id="method">How InSight Works</h2>
+
+    <div class="columns is-multiline" style="margin-top: 1rem;">
+      <div class="column is-6">
+        <div class="box" style="height:100%;">
+          <span class="tag is-link is-light">Stage 1</span>
+          <h3 class="title is-5" style="margin:.6rem 0 .4rem;">Primitive steerability</h3>
+          <p class="is-size-6 has-text-grey-dark">
+            Human demonstrations are decomposed into labeled primitives by aligning a VLM-generated primitive
+            plan with gripper-state transitions and dominant end-effector motion. Each primitive segment becomes
+            a separate training episode, fine-tuning the VLA into a policy that can execute and terminate
+            individual primitives on command.
+          </p>
+        </div>
+      </div>
+      <div class="column is-6">
+        <div class="box" style="height:100%;">
+          <span class="tag is-link is-light">Stage 2</span>
+          <h3 class="title is-5" style="margin:.6rem 0 .4rem;">Skill acquisition</h3>
+          <p class="is-size-6 has-text-grey-dark">
+            Given a new task, the VLM builds a plan and flags any primitive missing from the VLA's vocabulary as
+            a primitive gap. Known primitives are executed by the steerable VLA, while each gap is attempted by a
+            low-level controller parameterized by a VLM-proposed motion axis and signed magnitude. A VLM oracle
+            verifies success, and new-primitive segments from successful rollouts are distilled into the VLA,
+            forming a data flywheel that grows the skill set.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <figure class="image publication-banner" style="margin-top: 1.5rem;">
+      <img src="static/images/methods_stage1.png" alt="Stage 1: automatic primitive segmentation">
+    </figure>
+    <p class="has-text-grey is-size-7 has-text-centered">
+      <b>Stage 1.</b> A demonstration is split into labeled primitives using gripper-state and dominant-motion cues.
+    </p>
+
+    <div style="max-width: 720px; margin: 1rem auto 0; background:#f6f4ef; border:1px solid #ececec; border-radius:10px; padding:0.75rem 1rem;">
+      <p class="is-size-7 has-text-centered" style="color:#444; margin:0;">
+        Automatic primitive segmentation matches manual labeling within <b>~0.3&nbsp;s</b> (&asymp;6&nbsp;frames),
+        and the primitive-trained VLA stops on command in <b>16/16</b> trials versus <b>0/16</b> for an
+        unsegmented policy.
+      </p>
+    </div>
+
+    <figure class="image publication-banner" style="margin-top: 2rem;">
+      <img src="static/images/methods_stage2.png" alt="Stage 2: VLM-guided skill acquisition">
+    </figure>
+    <p class="has-text-grey is-size-7 has-text-centered">
+      <b>Stage 2.</b> The VLM identifies and parameterizes a missing primitive, the robot executes it, and a VLM oracle verifies success.
+    </p>
+
+    <p class="has-text-grey is-size-7 has-text-centered" style="margin-top: 1.5rem; max-width: 760px; margin-left: auto; margin-right: auto;">
+      <b>Implementation.</b> InSight fine-tunes a &pi;<sub>0.5</sub> VLA with LoRA, and uses Gemini 3 Flash as the
+      VLM across four roles: demonstration segmentation, task planning, primitive-gap proposal, and
+      image-based success checking. The framework is agnostic to the underlying VLA.
+    </p>
+  </div>
+</section>
+
+<!-- ============================================================
+     5. WATCH IT WORK  ·  acquire -> compose (climax)
+     ============================================================ -->
+<section class="section hero is-light">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 has-text-centered" id="results">Acquiring New Skills</h2>
+    <div class="content has-text-justified" style="max-width: 850px; margin: 0 auto 2.5rem;">
+      <p>
+        Each skill below is acquired with <b>no human demonstrations of that skill</b>. Starting from
+        demonstrations of a <i>different</i> task, InSight identifies the missing primitives, practices them,
+        and folds them back into the policy. On the left is what the robot was trained on; on the right is the
+        new skill it acquires.
+      </p>
+    </div>
+
+    <!-- Block flipping -->
+    <div class="box skill-task">
+      <h3 class="title is-5 has-text-centered" style="margin-bottom: 1.25rem;">
+        Block flipping <span class="has-text-grey has-text-weight-normal">from pick-and-place demos only &middot; 8&times; speed</span>
+      </h3>
+      <div class="columns is-vcentered is-variable is-2">
+        <div class="column demos-col">
+          <p class="skill-col-label">Trained on<small>pick-and-place</small></p>
+          <div class="media-slot">
+            <video controls autoplay muted loop playsinline preload="metadata">
+              <source src="static/videos/blockflip_demo.mp4?v=2" type="video/mp4">
+            </video>
+          </div>
+        </div>
+        <div class="column is-narrow has-text-centered"><span class="skill-arrow">&rarr;</span></div>
+        <div class="column acquired-col">
+          <p class="skill-col-label">Acquired (no human demos)<small>block flipping (rotate-block primitive)</small></p>
+          <div class="media-slot">
+            <video controls autoplay muted loop playsinline preload="metadata">
+              <source src="static/videos/blockflip_newskill.mp4?v=4" type="video/mp4">
+            </video>
+          </div>
+        </div>
+      </div>
+      <figure class="image" style="margin: 1.75rem auto 0.5rem; max-width: 520px;">
+        <img src="static/images/flip_iteration.svg" alt="Block-flip sample efficiency" style="width: 100%; display: block;">
+      </figure>
+      <p class="is-size-6 has-text-grey-dark has-text-centered" style="max-width: 640px; margin: 0 auto;">
+        With <i>no</i> human demonstrations of the flip, InSight practices the missing rotate-block primitive
+        and climbs to <b>75%</b> block-flip success over 479 rollouts. An RL baseline (SAC) given the same
+        budget never completes a flip (<b>0%</b>).
+      </p>
+    </div>
+
+    <!-- Drawer closing -->
+    <div class="box skill-task">
+      <h3 class="title is-5 has-text-centered" style="margin-bottom: 1.25rem;">
+        Drawer closing <span class="has-text-grey has-text-weight-normal">from drawer-opening demos only &middot; 6&times; speed</span>
+      </h3>
+      <div class="columns is-vcentered is-variable is-2">
+        <div class="column demos-col">
+          <p class="skill-col-label">Trained on<small>open drawer</small></p>
+          <div class="media-slot">
+            <video controls autoplay muted loop playsinline preload="metadata">
+              <source src="static/videos/drawer_open_demo.mp4?v=2" type="video/mp4">
+            </video>
+          </div>
+        </div>
+        <div class="column is-narrow has-text-centered"><span class="skill-arrow">&rarr;</span></div>
+        <div class="column acquired-col">
+          <p class="skill-col-label">Acquired (no human demos)<small>close drawer, from an out-of-distribution open start</small></p>
+          <div class="media-slot">
+            <video controls autoplay muted loop playsinline preload="metadata">
+              <source src="static/videos/drawer_close.mp4?v=2" type="video/mp4">
+            </video>
+          </div>
+        </div>
+      </div>
+      <p class="has-text-centered is-size-7" style="margin-top: 0.9rem; color:#555;">
+        <b style="color:#8C1515;">100%</b> drawer closing over 25 trials from the out-of-distribution open start
+        (70/82 acquired primitives) &mdash; while still opening the drawer.
+      </p>
+    </div>
+
+    <!-- Card 3: Twisting, pouring, and composing them (real-world) -->
+    <div class="box skill-task">
+      <h3 class="title is-5 has-text-centered" style="margin-bottom: 0.25rem;">
+        Twisting, pouring, and composing them <span class="has-text-grey has-text-weight-normal">from pick-and-place demos only &middot; 4&times; speed</span>
+      </h3>
+      <p class="is-size-6 has-text-grey has-text-centered" style="margin-bottom: 1.5rem;">
+        Two real-world primitives acquired separately, then chained into a long-horizon task.
+      </p>
+
+      <p class="has-text-weight-bold has-text-centered is-size-6" style="margin-bottom: 0.6rem;">Twisting open a cap</p>
+      <div class="columns is-vcentered is-variable is-2">
+        <div class="column demos-col">
+          <p class="skill-col-label">Trained on<small>pick-and-place (top grasp)</small></p>
+          <div class="media-slot">
+            <video controls autoplay muted loop playsinline preload="metadata">
+              <source src="static/videos/twist_demo.mp4?v=2" type="video/mp4">
+            </video>
+          </div>
+        </div>
+        <div class="column is-narrow has-text-centered"><span class="skill-arrow">&rarr;</span></div>
+        <div class="column acquired-col">
+          <p class="skill-col-label">Acquired (no human demos)<small>twist open the bottle cap (new primitive: rotate cap)</small></p>
+          <div class="media-slot">
+            <video controls autoplay muted loop playsinline preload="metadata">
+              <source src="static/videos/twist_newskill.mp4?v=2" type="video/mp4">
+            </video>
+          </div>
+        </div>
+      </div>
+
+      <p class="has-text-weight-bold has-text-centered is-size-6" style="margin: 1.75rem 0 0.6rem;">Pouring</p>
+      <div class="columns is-vcentered is-variable is-2">
+        <div class="column demos-col">
+          <p class="skill-col-label">Trained on<small>pick-and-place (side grasp)</small></p>
+          <div class="media-slot">
+            <video controls autoplay muted loop playsinline preload="metadata">
+              <source src="static/videos/pour_demo.mp4?v=2" type="video/mp4">
+            </video>
+          </div>
+        </div>
+        <div class="column is-narrow has-text-centered"><span class="skill-arrow">&rarr;</span></div>
+        <div class="column acquired-col">
+          <p class="skill-col-label">Acquired (no human demos)<small>pouring (new primitives: tilt to pour, tilt upright)</small></p>
+          <div class="media-slot">
+            <video controls autoplay muted loop playsinline preload="metadata">
+              <source src="static/videos/pour_newskill.mp4?v=2" type="video/mp4">
+            </video>
+          </div>
+        </div>
+      </div>
+
+      <p class="has-text-weight-bold has-text-centered is-size-6" style="margin: 1.75rem 0 0.3rem;">Composing into a long-horizon task</p>
+      <p class="has-text-centered is-size-7 has-text-grey" style="max-width: 720px; margin: 0 auto 0.8rem;">
+        The separately acquired twist and pour skills chain into a 14-primitive task with no end-to-end demonstration.
+      </p>
+      <figure class="image publication-banner" style="max-width: 900px; margin: 0 auto 0.4rem;">
+        <video controls autoplay muted loop playsinline preload="metadata" style="width:100%; border-radius:12px;">
+          <source src="static/videos/twist_then_pour.mp4?v=2" type="video/mp4">
+        </video>
+      </figure>
+      <p class="has-text-centered is-size-7"><b>Twist-then-pour:</b> 14 primitives chained from the separately acquired twist and pour skills.</p>
+
+      <hr style="margin: 2rem 0 1.5rem; background:#e6e6e6; height:1px;">
+
+      <figure class="image" style="margin: 0 auto 0.5rem; max-width: 860px;">
+        <img src="static/images/per_primitive.svg" alt="Per-primitive success rates" style="width: 100%; display: block;">
+      </figure>
+      <div class="columns is-centered" style="margin-bottom: 1.75rem;">
+        <div class="column is-three-fifths">
+          <p class="is-size-6 has-text-grey-dark has-text-centered">
+            High per-primitive reliability compounds into <b>92%</b> success on twisting, <b>96%</b> on
+            pouring, and <b>80%</b> on the 14-primitive twist-then-pour composition, versus 32% / 16% / 4%
+            for CaP-X and <b>0%</b> even for a &pi;<sub>0.5</sub> baseline fine-tuned on the same demonstrations.
+          </p>
+        </div>
+      </div>
+
+      <figure class="image" style="margin: 0 auto 0.5rem; max-width: 620px;">
+        <img src="static/images/efficiency.svg" alt="Per-trial time breakdown vs CaP-X" style="width: 100%; display: block;">
+      </figure>
+      <div class="columns is-centered" style="margin-bottom: 1.75rem;">
+        <div class="column is-three-fifths">
+          <p class="is-size-6 has-text-grey-dark has-text-centered">
+            Because acquired primitives run as <i>known</i> skills, InSight spends far less VLM thinking time
+            than a zero-shot planner: it finishes twisting in <b>55&nbsp;s</b> vs 109&nbsp;s and pouring in
+            <b>124&nbsp;s</b> vs 207&nbsp;s against CaP-X, roughly <b>2&times; faster</b> per trial.
+          </p>
+        </div>
+      </div>
+
+      <figure class="image" style="margin: 0 auto 0.5rem; max-width: 500px;">
+        <img src="static/images/retention.svg" alt="Base skill retention" style="width: 100%; display: block;">
+      </figure>
+      <div class="columns is-centered">
+        <div class="column is-three-fifths">
+          <p class="is-size-6 has-text-grey-dark has-text-centered">
+            After adding the twist and pour primitives, the unified VLA retains its success on both original
+            pick-and-place skills (86%&rarr;100% and 100%&rarr;100%), showing no degradation on the tested base
+            skills as the primitive vocabulary expands.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 4: Sweeping (the motivating Mars scenario), as the closing task -->
+    <div class="box skill-task">
+      <h3 class="title is-5 has-text-centered" style="margin-bottom: 0.25rem;">
+        Sweeping <span class="has-text-grey has-text-weight-normal">from scooping demos only &middot; 4&times; speed</span>
+      </h3>
+      <p class="is-size-6 has-text-grey has-text-centered" style="margin-bottom: 1.1rem;">
+        The motivating scenario: a contact-rich, non-prehensile skill acquired with no sweeping demonstrations.
+      </p>
+      <div class="columns is-vcentered is-variable is-2">
+        <div class="column demos-col">
+          <p class="skill-col-label">Trained on<small>scooping</small></p>
+          <div class="media-slot">
+            <video controls autoplay muted loop playsinline preload="metadata">
+              <source src="static/videos/scoop_demo.mp4?v=3" type="video/mp4">
+            </video>
+          </div>
+        </div>
+        <div class="column is-narrow has-text-centered"><span class="skill-arrow">&rarr;</span></div>
+        <div class="column acquired-col">
+          <p class="skill-col-label">Acquired (no human demos)<small>sweeping (new primitive: lateral push)</small></p>
+          <div class="media-slot">
+            <video controls autoplay muted loop playsinline preload="metadata">
+              <source src="static/videos/sweep_newskill.mp4?v=3" type="video/mp4">
+            </video>
+          </div>
+        </div>
+      </div>
+      <p class="has-text-centered is-size-7" style="margin-top: 0.9rem; color:#555;">
+        InSight flags the lateral push as the missing primitive, acquires it, and succeeds in
+        <b style="color:#8C1515;">5/5</b> evaluation trials.
+      </p>
+    </div>
+
+    <div class="notification is-light is-info">
+      Using the VLM to acquire and reintegrate primitives, rather than only to plan over existing ones
+      at test time, lets the VLA <b>extend its own skill set</b> and compose the result while retaining
+      prior skills.
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     7. CONCLUSION
+     ============================================================ -->
+<section class="section hero is-light">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 has-text-centered" id="conclusion">Conclusion</h2>
+    <div class="content has-text-justified" style="max-width: 850px; margin: 0 auto;">
+      <p>
+        Teaching robots new manipulation skills is expensive. Adapting a VLA to a new task typically requires
+        collecting more human demonstrations. InSight makes the individual primitives of a VLA steerable,
+        which lets a VLM identify the primitives a new task needs, acquire the ones the policy is missing,
+        and recombine them. A robot can extend itself to new tasks without demonstrations of the target
+        skill, and the primitives it acquires can be reused on later tasks.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     ACKNOWLEDGMENTS
+     ============================================================ -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <h2 class="title is-4 has-text-centered">Acknowledgments</h2>
+    <div class="content has-text-justified" style="max-width: 760px; margin: 0 auto;">
+      <p class="is-size-6 has-text-grey-dark">
+        M. Wang is supported by the NASA NSTGRO Fellowship, and S. Tian was supported by the NSF GRFP.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     BIBTEX
+     ============================================================ -->
+<section class="section" id="BibTeX">
+  <div class="container is-max-desktop content">
+    <div class="bibtex-header">
+      <h2 class="title">BibTeX</h2>
+      <button class="copy-bibtex-btn" onclick="copyBibTeX()" title="Copy BibTeX to clipboard">
+        <i class="fas fa-copy"></i><span class="copy-text">Copy</span>
+      </button>
+    </div>
+    <pre id="bibtex-code"><code>@misc{wang2026insight,
+  title         = {InSight: Self-Guided Skill Acquisition via Steerable VLAs},
+  author        = {Wang, Maggie and Osterberg, Lars and Tian, Stephen and
+                   Shorinwa, Ola and Wu, Jiajun and Schwager, Mac},
+  year          = {2026},
+  eprint        = {2606.24884},
+  archivePrefix = {arXiv}
+}</code></pre>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content">
+          <p>
+            This page was built using the <a href="https://github.com/eliahuhorwitz/Academic-project-page-template" target="_blank">Academic Project Page Template</a>
+            which was adopted from the <a href="https://nerfies.github.io" target="_blank">Nerfies</a> project page.
+            You are free to borrow the source code of this website, we just ask that you link back to this page in the footer. <br>
+            This website is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">Creative
+            Commons Attribution-ShareAlike 4.0 International License</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<button class="scroll-to-top" onclick="scrollToTop()" aria-label="Scroll to top">
+  <i class="fas fa-arrow-up"></i>
+</button>
+
+<!-- Progress-rail scroll-spy -->
+<script>
+(function () {
+  var items = Array.prototype.slice.call(document.querySelectorAll('.rail-item'));
+  if (!items.length) return;
+  var fill = document.querySelector('.rail-fill');
+  var secs = items.map(function (a) { return document.getElementById(a.getAttribute('data-sec')); });
+
+  function update() {
+    var current = 0;
+    for (var i = 0; i < secs.length; i++) {
+      if (secs[i] && secs[i].getBoundingClientRect().top <= 150) current = i;
+    }
+    // near the very bottom, force the last item active
+    if ((window.innerHeight + window.scrollY) >= (document.body.scrollHeight - 4)) current = secs.length - 1;
+    for (var j = 0; j < items.length; j++) items[j].classList.toggle('is-active', j === current);
+    if (fill) {
+      var dot = items[current].querySelector('.rail-dot');
+      var h = items[current].offsetTop + dot.offsetHeight / 2 - 6;
+      fill.style.height = Math.max(0, h) + 'px';
+    }
+  }
+
+  var ticking = false;
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function () { ticking = false; update(); });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', update);
+  window.addEventListener('load', update);
+  update();
+})();
+</script>
+
+<!-- Scroll-reveal for content sections -->
+<script>
+(function () {
+  if (!('IntersectionObserver' in window)) return;
+  var blocks = [];
+  document.querySelectorAll('section').forEach(function (s) {
+    if (s.querySelector('h2.title')) blocks.push(s.querySelector('.container') || s);
+  });
+  if (!blocks.length) return;
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: 0.06, rootMargin: '0px 0px -7% 0px' });
+  blocks.forEach(function (b) { b.classList.add('reveal'); io.observe(b); });
+})();
+</script>
+
+</body>
+</html>
